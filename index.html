@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GenAI Mental Wellness Tracker</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      background-color: #070b13;
+    }
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(139, 92, 246, 0.2);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(139, 92, 246, 0.4);
+    }
+    @keyframes scan {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
+    }
+    .scanner-line {
+      animation: scan 2s linear infinite;
+    }
+    @keyframes ripple {
+      0% { transform: scale(0.95); opacity: 0.5; }
+      50% { transform: scale(1.08); opacity: 0.8; }
+      100% { transform: scale(0.95); opacity: 0.5; }
+    }
+    .breathing-glow {
+      animation: ripple 4s ease-in-out infinite;
+    }
+    .breathing-glow-hold {
+      animation: none !important;
+      box-shadow: 0 0 25px rgba(139, 92, 246, 0.6);
+    }
+    .breathing-glow-exhale {
+      transform: scale(0.9) !important;
+      transition: all 4s ease-in-out;
+    }
+    .breathing-glow-inhale {
+      transform: scale(1.15) !important;
+      transition: all 4s ease-in-out;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+    @keyframes panic-breath {
+      0% {
+        transform: scale(0.85);
+        box-shadow: 0 0 30px rgba(244, 63, 94, 0.3), inset 0 0 20px rgba(244, 63, 94, 0.1);
+        background: rgba(244, 63, 94, 0.1);
+        border-color: rgba(244, 63, 94, 0.4);
+      }
+      40% {
+        transform: scale(1.35);
+        box-shadow: 0 0 70px rgba(139, 92, 246, 0.7), inset 0 0 35px rgba(139, 92, 246, 0.3);
+        background: rgba(139, 92, 246, 0.15);
+        border-color: rgba(168, 85, 247, 0.6);
+      }
+      100% {
+        transform: scale(0.85);
+        box-shadow: 0 0 30px rgba(244, 63, 94, 0.3), inset 0 0 20px rgba(244, 63, 94, 0.1);
+        background: rgba(244, 63, 94, 0.1);
+        border-color: rgba(244, 63, 94, 0.4);
+      }
+    }
+    .animate-panic-breath {
+      animation: panic-breath 10s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+  </style>
+</head>
+<body class="text-gray-100 flex items-center justify-center min-h-screen p-0 sm:p-4">
+
+  <!-- Main Mobile Frame Container -->
+  <div class="w-full max-w-md bg-[#0a0f1d] min-h-screen sm:min-h-[850px] sm:rounded-3xl shadow-2xl relative border-x border-purple-950/20 flex flex-col justify-between overflow-hidden">
+    
+    <!-- Header Background Deco -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-violet-600/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-48 right-0 w-32 h-32 bg-fuchsia-600/5 rounded-full blur-2xl pointer-events-none"></div>
+
+    <!-- Scrollable Main Panel -->
+    <div class="flex-1 overflow-y-auto px-5 pt-6 pb-24">
+      
+      <!-- Top Title and Info -->
+      <div class="flex justify-between items-start mb-6">
+        <div>
+          <span class="text-xs font-semibold tracking-wider text-purple-400 uppercase bg-purple-950/40 border border-purple-800/30 px-2.5 py-1 rounded-full">✨ GenAI Companion</span>
+          <h1 class="text-2xl font-extrabold tracking-tight mt-2 text-white bg-gradient-to-r from-white via-slate-100 to-purple-200 bg-clip-text text-transparent">Mind Sanctuary</h1>
+        </div>
+        <div class="bg-slate-800/50 border border-slate-700/30 p-2 rounded-xl text-xs text-purple-300 flex items-center gap-1.5 font-medium backdrop-blur-sm">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Secure & Private
+        </div>
+      </div>
+
+      <!-- Target Exam Picker -->
+      <div class="bg-slate-900/40 border border-slate-800/60 p-4 rounded-2xl mb-5 backdrop-blur-sm">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5">Select Your Target Exam</label>
+        <div class="grid grid-cols-4 gap-1.5" id="exam-pills">
+          <button onclick="selectExam('JEE')" class="exam-pill active py-2 text-xs font-bold rounded-xl border transition-all duration-300 bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-900/20" id="pill-JEE">JEE</button>
+          <button onclick="selectExam('NEET')" class="exam-pill py-2 text-xs font-bold rounded-xl border transition-all duration-300 bg-slate-900/60 text-slate-400 border-slate-800 hover:text-slate-200" id="pill-NEET">NEET</button>
+          <button onclick="selectExam('UPSC')" class="exam-pill py-2 text-xs font-bold rounded-xl border transition-all duration-300 bg-slate-900/60 text-slate-400 border-slate-800 hover:text-slate-200" id="pill-UPSC">UPSC</button>
+          <button onclick="selectExam('Boards')" class="exam-pill py-2 text-xs font-bold rounded-xl border transition-all duration-300 bg-slate-900/60 text-slate-400 border-slate-800 hover:text-slate-200" id="pill-Boards">Boards</button>
+        </div>
+      </div>
+
+      <!-- Journal Entry Box -->
+      <div class="space-y-4 mb-6">
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Daily Mind Journal</label>
+            <span class="text-[10px] text-slate-500" id="char-count">0 characters</span>
+          </div>
+          
+          <div class="relative rounded-2xl border border-slate-800 bg-slate-950/60 focus-within:border-purple-500/50 overflow-hidden transition-all duration-300">
+            <!-- Scanning Animation overlay -->
+            <div id="scanning-overlay" class="hidden absolute inset-0 bg-purple-900/5 pointer-events-none">
+              <div class="scanner-line w-full h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent blur-[1px]"></div>
+            </div>
+            
+            <textarea id="journal-textarea" oninput="updateCharCount()" placeholder="How are you feeling today? Write about mock test marks, preparation fatigue, sleep, self-doubt, or study pressures..." class="w-full min-h-[140px] bg-transparent border-0 outline-none p-4 text-sm text-slate-200 placeholder-slate-500 resize-none focus:ring-0 leading-relaxed" required></textarea>
+          </div>
+        </div>
+
+        <!-- Sample Diaries Quick-Insert -->
+        <div class="flex flex-wrap gap-1.5 items-center">
+          <span class="text-[10px] text-slate-500 mr-1 font-medium">Auto-fill stressor:</span>
+          <button onclick="fillDiary(0)" class="text-[10px] bg-slate-900/80 hover:bg-slate-800 border border-slate-800/80 hover:border-slate-700/80 text-slate-300 px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1">📝 Mock Score</button>
+          <button onclick="fillDiary(1)" class="text-[10px] bg-slate-900/80 hover:bg-slate-800 border border-slate-800/80 hover:border-slate-700/80 text-slate-300 px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1">💤 14hr Fatigue</button>
+          <button onclick="fillDiary(2)" class="text-[10px] bg-slate-900/80 hover:bg-slate-800 border border-slate-800/80 hover:border-slate-700/80 text-slate-300 px-2 py-1 rounded-lg transition-all duration-200 flex items-center gap-1">👥 Peer Stress</button>
+        </div>
+
+        <!-- Mood Emoji Selector -->
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Select Current Mood</label>
+          <div class="grid grid-cols-5 gap-1.5" id="mood-grid">
+            <button onclick="selectMood(0)" class="mood-btn border border-orange-500/20 bg-orange-500/10 p-2.5 rounded-xl text-center transition-all duration-300 flex flex-col items-center gap-1" id="mood-0">
+              <span class="text-xl">😔</span>
+              <span class="text-[10px] text-orange-400 font-medium">Overwhelmed</span>
+            </button>
+            <button onclick="selectMood(1)" class="mood-btn border border-slate-800 bg-slate-900/30 p-2.5 rounded-xl text-center transition-all duration-300 flex flex-col items-center gap-1" id="mood-1">
+              <span class="text-xl">😰</span>
+              <span class="text-[10px] text-slate-400 font-medium">Anxious</span>
+            </button>
+            <button onclick="selectMood(2)" class="mood-btn border border-slate-800 bg-slate-900/30 p-2.5 rounded-xl text-center transition-all duration-300 flex flex-col items-center gap-1" id="mood-2">
+              <span class="text-xl">😐</span>
+              <span class="text-[10px] text-slate-400 font-medium">Exhausted</span>
+            </button>
+            <button onclick="selectMood(3)" class="mood-btn border border-slate-800 bg-slate-900/30 p-2.5 rounded-xl text-center transition-all duration-300 flex flex-col items-center gap-1" id="mood-3">
+              <span class="text-xl">😌</span>
+              <span class="text-[10px] text-slate-400 font-medium">Balanced</span>
+            </button>
+            <button onclick="selectMood(4)" class="mood-btn border border-slate-800 bg-slate-900/30 p-2.5 rounded-xl text-center transition-all duration-300 flex flex-col items-center gap-1" id="mood-4">
+              <span class="text-xl">🚀</span>
+              <span class="text-[10px] text-slate-400 font-medium">Focused</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <button id="analyze-btn" onclick="startAnalysis()" class="w-full py-4 rounded-xl font-semibold bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-lg shadow-violet-900/20 active:scale-98 transition-all duration-300 flex items-center justify-center gap-2">
+          <svg class="w-4 h-4 text-purple-200" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Analyze with GenAI
+        </button>
+      </div>
+
+      <!-- ===================================== -->
+      <!-- AI DASHBOARD SECTION (Hidden by Default) -->
+      <!-- ===================================== -->
+      <div id="ai-dashboard" class="hidden space-y-5 transition-all duration-700 opacity-0 transform translate-y-6">
+        
+        <!-- Dashboard Divider Header -->
+        <div class="flex items-center gap-3 py-2">
+          <div class="h-[1px] bg-gradient-to-r from-transparent to-purple-800/40 flex-1"></div>
+          <span class="text-xs font-bold uppercase tracking-wider text-purple-400 bg-purple-950/30 border border-purple-800/30 px-3 py-1 rounded-full flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            Cognitive Diagnostics
+          </span>
+          <div class="h-[1px] bg-gradient-to-l from-transparent to-purple-800/40 flex-1"></div>
+        </div>
+
+        <!-- Emotional Patterns Diagnostic -->
+        <div class="bg-gradient-to-b from-[#111625] to-[#0c111e] border border-purple-950/40 rounded-2xl p-5 shadow-xl">
+          <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+            <span class="w-1.5 h-3 rounded-full bg-indigo-500"></span>
+            Detected Emotional Patterns
+          </h3>
+          <div class="space-y-4">
+            <!-- Pattern 1 -->
+            <div>
+              <div class="flex justify-between text-xs mb-1.5">
+                <span class="text-slate-400 font-medium">Burnout Level</span>
+                <span class="text-orange-400 font-bold" id="level-burnout">0%</span>
+              </div>
+              <div class="h-2 w-full bg-slate-950 rounded-full overflow-hidden">
+                <div id="bar-burnout" class="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full transition-all duration-1000" style="width: 0%"></div>
+              </div>
+            </div>
+            <!-- Pattern 2 -->
+            <div>
+              <div class="flex justify-between text-xs mb-1.5">
+                <span class="text-slate-400 font-medium">Exam Anxiety</span>
+                <span class="text-rose-400 font-bold" id="level-anxiety">0%</span>
+              </div>
+              <div class="h-2 w-full bg-slate-950 rounded-full overflow-hidden">
+                <div id="bar-anxiety" class="h-full bg-gradient-to-r from-rose-500 to-red-500 rounded-full transition-all duration-1000" style="width: 0%"></div>
+              </div>
+            </div>
+            <!-- Pattern 3 -->
+            <div>
+              <div class="flex justify-between text-xs mb-1.5">
+                <span class="text-slate-400 font-medium">Self-Doubt</span>
+                <span class="text-purple-400 font-bold" id="level-doubt">0%</span>
+              </div>
+              <div class="h-2 w-full bg-slate-950 rounded-full overflow-hidden">
+                <div id="bar-doubt" class="h-full bg-gradient-to-r from-purple-500 to-violet-500 rounded-full transition-all duration-1000" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden Triggers Detected -->
+        <div class="bg-gradient-to-b from-[#111625] to-[#0c111e] border border-purple-950/40 rounded-2xl p-5 shadow-xl">
+          <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2">
+            <span class="w-1.5 h-3 rounded-full bg-purple-500"></span>
+            Hidden Stress Triggers Identified
+          </h3>
+          <p class="text-[11px] text-slate-500 leading-relaxed mb-3.5">GenAI semantic parsing identified these core thematic contributors to your mental load:</p>
+          <div class="flex flex-wrap gap-2" id="trigger-badges">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- AI Companion Chat Bubble -->
+        <div class="space-y-3">
+          <div class="flex items-center gap-2 px-1">
+            <div class="relative">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-lg">✨</div>
+              <div class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0a0f1d]"></div>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-slate-200">Aura</h4>
+              <p class="text-[9px] text-purple-400 font-medium">Empathetic AI Companion</p>
+            </div>
+          </div>
+
+          <div class="bg-[#111728] border border-purple-900/30 rounded-2xl rounded-tl-none p-5 text-sm text-slate-200 leading-relaxed shadow-xl space-y-4 relative">
+            <div id="chat-message-content" class="whitespace-pre-line text-slate-200">
+              <!-- Animated AI text goes here -->
+            </div>
+
+            <div class="pt-3 border-t border-purple-950/40 flex items-center justify-between gap-4">
+              <span class="text-[10px] text-slate-500 flex items-center gap-1">
+                <svg class="w-3.5 h-3.5 text-purple-400/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                Mentorship Loop Enabled
+              </span>
+              <button onclick="shareWithMentorHtml()" class="px-3 py-1.5 rounded-lg text-[10px] font-bold bg-purple-950/60 hover:bg-purple-900/80 text-purple-300 hover:text-white border border-purple-800/20 hover:border-purple-700/40 transition-all duration-200 flex items-center gap-1.5 cursor-pointer">
+                <svg class="w-3 h-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 10.742l4.576-2.288m0 7.092l-4.576-2.288M19 12a3 3 0 11-6 0 3 3 0 016 0zm-12 5a3 3 0 11-6 0 3 3 0 016 0zm0-10a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Share with Mentor
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Breathing Exercise Guide -->
+        <div class="bg-[#111524] border border-indigo-950/50 rounded-2xl p-5 text-center shadow-2xl relative overflow-hidden">
+          <div class="absolute -top-10 -right-10 w-24 h-24 bg-indigo-500/10 rounded-full blur-xl"></div>
+          
+          <h3 class="text-sm font-bold text-indigo-300 mb-1 flex items-center justify-center gap-2">
+            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707-.707M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Interactive Mindfulness Reset
+          </h3>
+          <p class="text-slate-500 text-[11px] mb-5">Box Breathing technique (4s Inhale, 4s Hold, 4s Exhale, 4s Hold) to calm heart rate instantly</p>
+          
+          <div class="flex flex-col items-center justify-center py-6">
+            <!-- Breathing Ring -->
+            <div id="breathing-circle" class="w-32 h-32 rounded-full bg-gradient-to-tr from-indigo-950 to-purple-950 border-2 border-indigo-500/30 flex flex-col items-center justify-center shadow-lg relative transition-all duration-1000 ease-in-out">
+              <div id="breathing-glow-ring" class="absolute inset-0 rounded-full bg-indigo-500/10 pointer-events-none breathing-glow"></div>
+              
+              <span id="breathing-action" class="text-xs font-semibold uppercase tracking-widest text-slate-400">Idle</span>
+              <span id="breathing-countdown" class="text-3xl font-extrabold text-white mt-0.5">4</span>
+              <span class="text-[9px] text-indigo-400/70 font-medium mt-1">Seconds</span>
+            </div>
+            
+            <button onclick="toggleBreathingGuide()" id="breathing-btn" class="mt-6 px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-800/60 active:scale-95 transition-all duration-200 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" id="breathing-btn-icon"><path d="M8 5v14l11-7z"/></svg>
+              <span id="breathing-btn-text">Begin Breathing Reset</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Student Daily Motivation Widget -->
+        <div class="bg-[#111524] border border-indigo-950/50 rounded-2xl p-5 text-center shadow-2xl relative overflow-hidden">
+          <div class="absolute -top-10 -left-10 w-24 h-24 bg-purple-500/10 rounded-full blur-xl pointer-events-none"></div>
+          
+          <div class="flex items-center justify-between mb-4">
+            <span id="html-quote-tag" class="text-[9px] font-bold uppercase tracking-widest text-indigo-400 bg-indigo-950/50 border border-indigo-800/20 px-2.5 py-1 rounded-full">Resilience Focus</span>
+            <span class="text-[10px] text-slate-500 font-medium">Aspirant Quote</span>
+          </div>
+
+          <div class="py-2 px-1">
+            <p id="html-quote-text" class="text-sm font-semibold text-slate-200 leading-relaxed italic">"The difference between a successful person and others is not a lack of strength, not a lack of knowledge, but rather a lack of will."</p>
+            <p id="html-quote-author" class="text-[10px] text-purple-400 font-bold mt-3 uppercase tracking-wider">— Vince Lombardi</p>
+          </div>
+
+          <button onclick="generateHtmlQuote()" class="mt-4 w-full py-3 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-900/60 to-indigo-900/60 hover:from-purple-800 hover:to-indigo-800 text-purple-200 border border-purple-800/30 hover:border-purple-700/40 active:scale-98 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-md">
+            <svg class="w-3.5 h-3.5 text-purple-300 animate-pulse" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Generate Daily Motivation
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Bottom App Bar / Navigation -->
+    <div class="absolute bottom-0 left-0 right-0 h-16 bg-[#080d1a]/95 border-t border-slate-900/60 flex items-center justify-around px-6 backdrop-blur-md z-30">
+      <button onclick="resetApp()" class="flex flex-col items-center gap-1 text-purple-400 font-medium">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span class="text-[10px]">Journal</span>
+      </button>
+      <div class="h-8 w-[1px] bg-slate-900/60"></div>
+      <button onclick="alert('Your mental wellbeing data is stored fully offline in your browser container. Complete data privacy is guaranteed.')" class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300 font-medium transition-all duration-200">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        <span class="text-[10px]">Security</span>
+      </button>
+    </div>
+
+    <!-- Floating Panic Button -->
+    <button onclick="openPanicSanctuary()" class="absolute bottom-20 right-4 z-40 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-extrabold text-[10px] px-3.5 py-2.5 rounded-full flex items-center gap-1.5 shadow-lg shadow-rose-950/40 border border-rose-500/30 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer" id="panic-floating-btn" style="animation: float 3s ease-in-out infinite;">
+      <span class="relative flex h-2 w-2">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-300 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-100"></span>
+      </span>
+      Panic / Calm Down
+    </button>
+
+    <!-- Panic Attack Sanctuary Overlay (Hidden by Default) -->
+    <div id="panic-overlay" class="hidden absolute inset-0 bg-[#070b13]/98 backdrop-blur-md z-50 flex flex-col items-center justify-between p-6 select-none">
+      <div class="text-center mt-8 space-y-1">
+        <span class="text-[10px] font-bold tracking-widest text-rose-400 uppercase bg-rose-950/40 border border-rose-800/30 px-3 py-1 rounded-full">🚨 Mind Sanctuary • Panic Protocol</span>
+        <h2 class="text-xl font-black text-white tracking-tight mt-3">Deep Breathing Sanctuary</h2>
+        <p class="text-[11px] text-slate-400 max-w-xs leading-relaxed mx-auto">Let your shoulders drop. Loosen your jaw. Just follow the expanding and contracting ring. You are completely safe.</p>
+      </div>
+
+      <!-- Central Ring -->
+      <div class="flex flex-col items-center justify-center my-auto relative">
+        <div class="absolute w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div id="panic-circle" class="w-40 h-40 rounded-full border-2 border-rose-500/30 flex flex-col items-center justify-center relative select-none animate-panic-breath">
+          <div class="absolute inset-2 rounded-full border border-rose-500/10"></div>
+          <div class="absolute inset-4 rounded-full border border-rose-500/5"></div>
+          <span id="panic-action-text" class="text-xs font-bold uppercase tracking-widest text-slate-400">Inhale...</span>
+          <span id="panic-timer" class="text-4xl font-black text-white mt-2 font-mono">4</span>
+          <span class="text-[9px] text-rose-300/60 font-bold uppercase mt-1 tracking-wider">Seconds</span>
+        </div>
+
+        <!-- Live Phase indicator bar -->
+        <div class="mt-8 flex items-center gap-1">
+          <span id="panic-inhale-lbl" class="text-[9px] font-bold uppercase tracking-widest text-rose-400 font-black">Inhale (4s)</span>
+          <span class="text-slate-700 mx-2">•</span>
+          <span id="panic-exhale-lbl" class="text-[9px] font-bold uppercase tracking-widest text-slate-500">Exhale (6s)</span>
+        </div>
+      </div>
+
+      <div class="w-full max-w-xs mb-8">
+        <button onclick="closePanicSanctuary()" class="w-full py-4 rounded-2xl font-bold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 hover:border-slate-700 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-xs">
+          Close Sanctuary
+        </button>
+      </div>
+    </div>
+
+    <!-- Mentor Share Toast Success Notification -->
+    <div id="html-share-toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-55 max-w-sm w-[90%] bg-[#080d19]/98 border border-emerald-500/40 rounded-2xl p-4 shadow-2xl shadow-emerald-950/40 flex items-start gap-3" style="animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+      <div class="p-1.5 bg-emerald-500/10 rounded-xl text-emerald-400 shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <div class="space-y-0.5">
+        <p class="text-xs font-bold text-white">Confidential Summary Sent</p>
+        <p class="text-[10px] text-slate-400 leading-relaxed">Confidential summary sent. Your designated academic mentor will review this to better support you.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // State Variables
+    let selectedExamType = "JEE";
+    let activeMoodIdx = 0;
+    let isAnalyzingFlag = false;
+    let isBreathingActive = false;
+    let breathingTimerVal = 4;
+    let breathingPhaseName = "Inhale";
+    let breathingIntervalId = null;
+
+    let isPanicActive = false;
+    let panicTimerVal = 0;
+    let panicIntervalId = null;
+
+    const MOODS_ARRAY = [
+      { emoji: "😔", label: "Overwhelmed", color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20" },
+      { emoji: "😰", label: "Anxious", color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20" },
+      { emoji: "😐", label: "Exhausted", color: "text-indigo-400", bg: "bg-indigo-500/10", border: "border-indigo-500/20" },
+      { emoji: "😌", label: "Balanced", color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+      { emoji: "🚀", label: "Focused", color: "text-fuchsia-400", bg: "bg-fuchsia-500/10", border: "border-fuchsia-500/20" }
+    ];
+
+    const PRE_FILLS_ARRAY = [
+      {
+        title: "Mock Test Stress",
+        text: "Just got my mock test results back. My percentile dropped significantly. I studied so hard for organic chemistry, but everything went blank in the exam. I feel like I'm letting my parents down and won't clear the cutoff.",
+        moodIdx: 1,
+        exam: "JEE"
+      },
+      {
+        title: "14-Hour Burnout",
+        text: "I've been studying since 6 AM, revising human anatomy and doing physics MCQs. It is 11 PM now and my eyes hurt. I haven't stepped outside my room in 3 days. I feel completely drained and can't absorb any more chapters.",
+        moodIdx: 2,
+        exam: "NEET"
+      },
+      {
+        title: "Syllabus Backlog Panic",
+        text: "The sheer volume of the GS syllabus is paralyzing me. Every time I complete one chapter of history, I feel like I've forgotten geography. Everyone on study forums seems so far ahead. I'm doubting why I even chose this path.",
+        moodIdx: 0,
+        exam: "UPSC"
+      }
+    ];
+
+    const STUDENT_QUOTES_ARRAY = [
+      { text: "The difference between a successful person and others is not a lack of strength, not a lack of knowledge, but rather a lack of will.", author: "Vince Lombardi", category: "Resilience" },
+      { text: "Your focus determines your reality. One extra hour of deep revision can change your entire trajectory.", author: "JEE Expert Advice", category: "Focus" },
+      { text: "It always seems impossible until it's done. NEET, JEE, and UPSC are marathons, not sprints.", author: "Nelson Mandela", category: "Patience" },
+      { text: "Believe you can and you're halfway there. Mock tests do not define your final capability; they simply highlight where to strengthen your foundation.", author: "Theodore Roosevelt", category: "Confidence" },
+      { text: "Success is the sum of small efforts, repeated day in and day out. Sleep well tonight, revise tomorrow, keep marching forward.", author: "Robert Collier", category: "Consistency" },
+      { text: "You do not rise to the level of your goals. You fall to the level of your systems. Focus on your daily schedule, not just the rank.", author: "James Clear", category: "Strategy" },
+      { text: "The secret of getting ahead is getting started. Don't worry about the massive backlog; just master the very next page.", author: "Mark Twain", category: "Action" },
+      { text: "Consistency is infinitely more powerful than perfection. Keep showing up, even on days when progress feels slow.", author: "Aspirant Mentor", category: "Persistence" },
+      { text: "Do not fear mistakes. They are evidence that you are trying. Every incorrect question solved today is a saved mark in the final exam.", author: "Academic Wisdom", category: "Mindset" },
+      { text: "Success isn't overnight. It's when every single day you get just a little bit better than the day before. It all compounds.", author: "Dwayne Johnson", category: "Growth" }
+    ];
+
+    let currentQuoteIdx = 0;
+
+    function openPanicSanctuary() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(136.1, ctx.currentTime);
+        gain.gain.setValueAtTime(0.04, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 3.5);
+        osc.start();
+        osc.stop(ctx.currentTime + 3.5);
+      } catch(e) {}
+
+      isPanicActive = true;
+      panicTimerVal = 0;
+      document.getElementById("panic-overlay").classList.remove("hidden");
+      
+      updatePanicDisplay();
+
+      panicIntervalId = setInterval(() => {
+        panicTimerVal = (panicTimerVal + 1) % 10;
+        updatePanicDisplay();
+        
+        if (panicTimerVal === 0 || panicTimerVal === 4) {
+          try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            if (panicTimerVal === 0) {
+              osc.type = "sine";
+              osc.frequency.setValueAtTime(136.1, ctx.currentTime);
+              gain.gain.setValueAtTime(0.04, ctx.currentTime);
+            } else {
+              osc.type = "triangle";
+              osc.frequency.setValueAtTime(150, ctx.currentTime);
+              osc.frequency.exponentialRampToValueAtTime(350, ctx.currentTime + 0.3);
+              gain.gain.setValueAtTime(0.02, ctx.currentTime);
+            }
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 3.0);
+            osc.start();
+            osc.stop(ctx.currentTime + 3.0);
+          } catch(e) {}
+        }
+      }, 1000);
+    }
+
+    function updatePanicDisplay() {
+      const actText = document.getElementById("panic-action-text");
+      const timerText = document.getElementById("panic-timer");
+      const inhaleLbl = document.getElementById("panic-inhale-lbl");
+      const exhaleLbl = document.getElementById("panic-exhale-lbl");
+
+      if (panicTimerVal < 4) {
+        actText.innerText = "Inhale...";
+        timerText.innerText = 4 - panicTimerVal;
+        inhaleLbl.className = "text-[9px] font-bold uppercase tracking-widest text-rose-400 font-black";
+        exhaleLbl.className = "text-[9px] font-bold uppercase tracking-widest text-slate-500";
+      } else {
+        actText.innerText = "Exhale...";
+        timerText.innerText = 10 - panicTimerVal;
+        inhaleLbl.className = "text-[9px] font-bold uppercase tracking-widest text-slate-500";
+        exhaleLbl.className = "text-[9px] font-bold uppercase tracking-widest text-purple-400 font-black";
+      }
+    }
+
+    function closePanicSanctuary() {
+      isPanicActive = false;
+      clearInterval(panicIntervalId);
+      document.getElementById("panic-overlay").classList.add("hidden");
+    }
+
+    function updateCharCount() {
+      const text = document.getElementById("journal-textarea").value;
+      document.getElementById("char-count").innerText = `${text.length} characters`;
+    }
+
+    function selectExam(exam) {
+      selectedExamType = exam;
+      const pills = document.querySelectorAll("#exam-pills button");
+      pills.forEach(pill => {
+        pill.classList.remove("bg-purple-600", "text-white", "border-purple-500", "shadow-md", "shadow-purple-900/20");
+        pill.classList.add("bg-slate-900/60", "text-slate-400", "border-slate-800");
+      });
+      const activePill = document.getElementById("pill-" + exam);
+      activePill.classList.remove("bg-slate-900/60", "text-slate-400", "border-slate-800");
+      activePill.classList.add("bg-purple-600", "text-white", "border-purple-500", "shadow-md", "shadow-purple-900/20");
+    }
+
+    function selectMood(idx) {
+      activeMoodIdx = idx;
+      const btns = document.querySelectorAll(".mood-btn");
+      btns.forEach((btn, i) => {
+        btn.className = "mood-btn border border-slate-800 bg-slate-900/30 p-2.5 rounded-xl text-center transition-all duration-300 flex flex-col items-center gap-1";
+        const label = btn.querySelector("span:last-child");
+        label.className = "text-[10px] text-slate-400 font-medium";
+      });
+
+      const current = MOODS_ARRAY[idx];
+      const activeBtn = document.getElementById("mood-" + idx);
+      activeBtn.className = `mood-btn border ${current.border} ${current.bg} p-2.5 rounded-xl text-center transition-all duration-300 flex flex-col items-center gap-1`;
+      const activeLabel = activeBtn.querySelector("span:last-child");
+      activeLabel.className = `text-[10px] ${current.color} font-medium`;
+    }
+
+    function fillDiary(idx) {
+      const fill = PRE_FILLS_ARRAY[idx];
+      document.getElementById("journal-textarea").value = fill.text;
+      updateCharCount();
+      selectExam(fill.exam);
+      selectMood(fill.moodIdx);
+    }
+
+    function generateHtmlQuote() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.setValueAtTime(400, ctx.currentTime);
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.1);
+      } catch(e) {}
+
+      let nextIdx = currentQuoteIdx;
+      while (nextIdx === currentQuoteIdx) {
+        nextIdx = Math.floor(Math.random() * STUDENT_QUOTES_ARRAY.length);
+      }
+      currentQuoteIdx = nextIdx;
+      const quote = STUDENT_QUOTES_ARRAY[currentQuoteIdx];
+      document.getElementById("html-quote-tag").innerText = quote.category + " Focus";
+      document.getElementById("html-quote-text").innerText = '"' + quote.text + '"';
+      document.getElementById("html-quote-author").innerText = "— " + quote.author;
+    }
+
+    let htmlShareToastTimer = null;
+    function shareWithMentorHtml() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+        gain.gain.setValueAtTime(0.04, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+      } catch(e) {}
+
+      const toast = document.getElementById("html-share-toast");
+      toast.classList.remove("hidden");
+      if (htmlShareToastTimer) clearTimeout(htmlShareToastTimer);
+      htmlShareToastTimer = setTimeout(() => {
+        toast.classList.add("hidden");
+      }, 6000);
+    }
+
+    function startAnalysis() {
+      const text = document.getElementById("journal-textarea").value.trim();
+      if (!text) {
+        alert("Please write a few words in your journal first!");
+        return;
+      }
+
+      if (isAnalyzingFlag) return;
+      isAnalyzingFlag = true;
+
+      const btn = document.getElementById("analyze-btn");
+      btn.disabled = true;
+      btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> GenAI is reading...`;
+      
+      const overlay = document.getElementById("scanning-overlay");
+      overlay.classList.remove("hidden");
+
+      // Heuristic diagnostic engine
+      const textLower = text.toLowerCase();
+      let burnout = 50;
+      let anxiety = 50;
+      let doubt = 50;
+      let triggers = [];
+
+      if (textLower.includes("mock") || textLower.includes("test") || textLower.includes("score") || textLower.includes("marks")) {
+        anxiety += 25; doubt += 15; triggers.push("Mock Test Scores");
+      }
+      if (textLower.includes("sleep") || textLower.includes("tired") || textLower.includes("exhausted") || textLower.includes("hour")) {
+        burnout += 30; triggers.push("Sleep Deprivation");
+      }
+      if (textLower.includes("peer") || textLower.includes("friend") || textLower.includes("better than")) {
+        doubt += 25; triggers.push("Peer Pressure");
+      }
+      if (textLower.includes("syllabus") || textLower.includes("backlog") || textLower.includes("geography") || textLower.includes("chemistry")) {
+        burnout += 15; anxiety += 15; triggers.push("Syllabus Backlog");
+      }
+      if (textLower.includes("parent") || textLower.includes("let down") || textLower.includes("family")) {
+        anxiety += 20; doubt += 10; triggers.push("Parental Expectations");
+      }
+      
+      if (triggers.length === 0) {
+        triggers = ["Exam Fatigue", "Study Schedule"];
+      }
+
+      // Mood factor
+      const moodLabel = MOODS_ARRAY[activeMoodIdx].label;
+      if (moodLabel === "Overwhelmed") { burnout += 15; anxiety += 10; }
+      else if (moodLabel === "Anxious") { anxiety += 25; doubt += 15; }
+      else if (moodLabel === "Exhausted") { burnout += 30; }
+      else if (moodLabel === "Balanced") { burnout -= 25; anxiety -= 25; doubt -= 20; }
+      else if (moodLabel === "Focused") { burnout -= 15; anxiety -= 15; doubt -= 30; }
+
+      burnout = Math.min(98, Math.max(12, burnout));
+      anxiety = Math.min(98, Math.max(15, anxiety));
+      doubt = Math.min(98, Math.max(10, doubt));
+
+      // Construct Response Text
+      let intro = "";
+      let comforting = "";
+      let coping = "";
+      let specific = "";
+
+      if (selectedExamType === "JEE") {
+        specific = "balancing physics, chemistry, and mathematics while facing challenging mock tests is an immense mental load. Percentiles are just metrics of progress, not measures of your ultimate capability or engineering intelligence.";
+      } else if (selectedExamType === "NEET") {
+        specific = "memorizing massive biological concepts while solving physics equations under immense competition is extraordinarily demanding. The healing empathy you will one day give to your patients must begin with extending gentleness to yourself first today.";
+      } else if (selectedExamType === "UPSC") {
+        specific = "navigating an ocean-like general studies syllabus and dealing with unpredictable current affairs is a mental marathon. This journey is as much about emotional endurance and resilience as it is about knowledge.";
+      } else {
+        specific = "balancing multiple school subjects, board patterns, and future aspirations all at once creates severe mental friction. It is entirely natural to feel the weight of expectation during this transition.";
+      }
+
+      if (activeMoodIdx <= 2) { // Stress moods
+        intro = `I can feel how incredibly heavy this moment is for you, and I want to deeply acknowledge your dedication.`;
+        comforting = `You have been pushing your mind to its absolute limits. Studying for high-stakes exams can trap you in a high-cortisol loop where your brain can no longer process details efficiently. Your fatigue is a real biological signal from your nervous system asking for a safe pause.`;
+        coping = `Right now, give yourself absolute permission to do a **5-minute Pomodoro Screen Reset**. Push your chair back, step away from your study table, close your eyes, and drink a glass of water slowly.`;
+      } else {
+        intro = `It is wonderful that you are taking a mindful check-in today to balance your thoughts.`;
+        comforting = `Sustaining long-term preparation requires constant dynamic recalibration. Actively tracking your mental state is a major cognitive defense that prevents sudden preparation drops.`;
+        coping = `To protect this state, consider implementing a strict **50-10 study block ratio**: 50 minutes of deep study, followed by a strict 10 minutes away from any screen or notes.`;
+      }
+
+      const rawMarkdown = `${intro}\n\nPreparing for **${selectedExamType}** is one of the toughest academic challenges, and ${specific}\n\n${comforting}\n\n💡 **Your Tailored Coping Strategy:**\n${coping}\n\nLet's begin a gentle breathing sequence together below to immediately reset your stress hormones. Let the glowing circle guide you.`;
+
+      setTimeout(() => {
+        // Stop loading
+        isAnalyzingFlag = false;
+        overlay.classList.add("hidden");
+        btn.disabled = false;
+        btn.innerHTML = `<svg class="w-4 h-4 text-purple-200" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Analyze with GenAI`;
+
+        // Render Dashboard
+        const dash = document.getElementById("ai-dashboard");
+        dash.classList.remove("hidden");
+        setTimeout(() => {
+          dash.classList.remove("opacity-0", "translate-y-6");
+        }, 50);
+
+        // Fill Progress Bars
+        document.getElementById("level-burnout").innerText = burnout + "%";
+        document.getElementById("bar-burnout").style.width = burnout + "%";
+
+        document.getElementById("level-anxiety").innerText = anxiety + "%";
+        document.getElementById("bar-anxiety").style.width = anxiety + "%";
+
+        document.getElementById("level-doubt").innerText = doubt + "%";
+        document.getElementById("bar-doubt").style.width = doubt + "%";
+
+        // Fill Trigger Badges
+        const triggerBox = document.getElementById("trigger-badges");
+        triggerBox.innerHTML = "";
+        triggers.forEach(trig => {
+          triggerBox.innerHTML += `<span class="text-xs bg-slate-900 border border-purple-800/20 px-3 py-1.5 rounded-full text-purple-300 font-medium flex items-center gap-1.5 shadow-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+            ${trig}
+          </span>`;
+        });
+
+        // Fill Chat companion
+        document.getElementById("chat-message-content").innerHTML = rawMarkdown.replace(/\n/g, "<br>");
+        
+        // Scroll Smoothly
+        dash.scrollIntoView({ behavior: 'smooth' });
+
+      }, 2000);
+    }
+
+    function toggleBreathingGuide() {
+      const circle = document.getElementById("breathing-circle");
+      const textAction = document.getElementById("breathing-action");
+      const btnText = document.getElementById("breathing-btn-text");
+      const btnIcon = document.getElementById("breathing-btn-icon");
+
+      if (isBreathingActive) {
+        // Stop
+        isBreathingActive = false;
+        clearInterval(breathingIntervalId);
+        circle.className = "w-32 h-32 rounded-full bg-gradient-to-tr from-indigo-950 to-purple-950 border-2 border-indigo-500/30 flex flex-col items-center justify-center shadow-lg relative transition-all duration-1000 ease-in-out";
+        textAction.innerText = "Idle";
+        document.getElementById("breathing-countdown").innerText = "4";
+        btnText.innerText = "Begin Breathing Reset";
+        btnIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+      } else {
+        // Start
+        isBreathingActive = true;
+        breathingTimerVal = 4;
+        breathingPhaseName = "Inhale";
+        textAction.innerText = "Inhale";
+        document.getElementById("breathing-countdown").innerText = breathingTimerVal;
+        circle.className = "w-32 h-32 rounded-full bg-gradient-to-tr from-indigo-950 to-purple-950 border-2 border-indigo-500/30 flex flex-col items-center justify-center shadow-lg relative transition-all duration-1000 ease-in-out scale-115";
+        btnText.innerText = "Pause Breathing Reset";
+        btnIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+
+        breathingIntervalId = setInterval(() => {
+          breathingTimerVal--;
+          if (breathingTimerVal <= 0) {
+            // Next Phase
+            if (breathingPhaseName === "Inhale") {
+              breathingPhaseName = "Hold";
+              textAction.innerText = "Hold";
+              circle.className = "w-32 h-32 rounded-full bg-gradient-to-tr from-indigo-950 to-purple-950 border-2 border-indigo-500/30 flex flex-col items-center justify-center shadow-lg relative transition-all duration-1000 ease-in-out scale-115 shadow-[0_0_25px_rgba(139,92,246,0.6)]";
+            } else if (breathingPhaseName === "Hold") {
+              breathingPhaseName = "Exhale";
+              textAction.innerText = "Exhale";
+              circle.className = "w-32 h-32 rounded-full bg-gradient-to-tr from-indigo-950 to-purple-950 border-2 border-indigo-500/30 flex flex-col items-center justify-center shadow-lg relative transition-all duration-1000 ease-in-out scale-90";
+            } else if (breathingPhaseName === "Exhale") {
+              breathingPhaseName = "Rest";
+              textAction.innerText = "Hold";
+              circle.className = "w-32 h-32 rounded-full bg-gradient-to-tr from-indigo-950 to-purple-950 border-2 border-indigo-500/30 flex flex-col items-center justify-center shadow-lg relative transition-all duration-1000 ease-in-out scale-90 shadow-[0_0_20px_rgba(139,92,246,0.2)]";
+            } else {
+              breathingPhaseName = "Inhale";
+              textAction.innerText = "Inhale";
+              circle.className = "w-32 h-32 rounded-full bg-gradient-to-tr from-indigo-950 to-purple-950 border-2 border-indigo-500/30 flex flex-col items-center justify-center shadow-lg relative transition-all duration-1000 ease-in-out scale-115";
+            }
+            breathingTimerVal = 4;
+          }
+          document.getElementById("breathing-countdown").innerText = breathingTimerVal;
+        }, 1000);
+      }
+    }
+
+    function resetApp() {
+      document.getElementById("journal-textarea").value = "";
+      updateCharCount();
+      const dash = document.getElementById("ai-dashboard");
+      dash.classList.add("opacity-0", "translate-y-6");
+      setTimeout(() => {
+        dash.classList.add("hidden");
+      }, 500);
+      if (isBreathingActive) {
+        toggleBreathingGuide();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>
